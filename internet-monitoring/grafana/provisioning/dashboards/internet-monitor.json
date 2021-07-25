@@ -862,7 +862,7 @@
       }
     }
   ],
-  "refresh": "30s",
+  "refresh": "5m",
   "schemaVersion": 30,
   "style": "dark",
   "tags": [
