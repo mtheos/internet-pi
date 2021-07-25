@@ -7,6 +7,12 @@ pihole_enable: true
 pihole_hostname: pihole
 pihole_timezone: America/Chicago
 pihole_password: "change-this-password"
+dns_resolution_subnet: "172.16.0.0/29"
+
+# Cloudflared DNS configuration.
+cloudflared_dns_hostname: cloudflared-dns
+cloudflared_dns_ip: "172.16.0.3"
+cloudflared_dns_port: 5053
 
 # Internet monitoring configuration.
 monitoring_enable: true

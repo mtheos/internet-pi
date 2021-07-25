@@ -1,6 +1,13 @@
 # {{ ansible_managed }}
 ---
-version: "3"
+version: '3'
+
+networks:
+  dns-resolution:
+    ipam:
+      driver: default
+      config:
+        - subnet: '{{ dns_resolution_subnet }}'
 
 # More info at https://github.com/pi-hole/docker-pi-hole/ and https://docs.pi-hole.net/
 services:
@@ -9,21 +16,33 @@ services:
     image: pihole/pihole:latest
     hostname: '{{ pihole_hostname }}'
     ports:
-      - "53:53/tcp"
-      - "53:53/udp"
-      - "67:67/udp"
-      - "80:80/tcp"
-      - "443:443/tcp"
+      - '53:53/udp'
+      - '80:80/tcp'
     environment:
       TZ: '{{ pihole_timezone }}'
       WEBPASSWORD: '{{ pihole_password }}'
+      PIHOLE_DNS_: '{{ cloudflared_dns_ip }}#{{ cloudflared_dns_port }}'
       ServerIP: '{{ ansible_facts['default_ipv4']['address'] }}'
     dns:
       - 127.0.0.1
-      - 8.8.8.8
     volumes:
       - './etc-pihole/:/etc/pihole/'
       - './etc-dnsmasq.d/:/etc/dnsmasq.d/'
-    cap_add:
-      - NET_ADMIN
+    networks:
+      - dns-resolution
+    restart: unless-stopped
+
+  cloudflared-dns:
+    container_name: cloudflared-dns
+    image: visibilityspots/cloudflared:latest
+    hostname: '{{ cloudflared_dns_hostname }}'
+    ports:
+      - '{{ cloudflared_dns_port }}:{{ cloudflared_dns_port }}/udp'
+    environment:
+      PORT: '{{ cloudflared_dns_port }}'
+    dns:
+      - '127.0.0.1:{{ cloudflared_dns_port }}'
+    networks:
+      dns-resolution:
+        ipv4_address: '{{ cloudflared_dns_ip }}'
     restart: unless-stopped
