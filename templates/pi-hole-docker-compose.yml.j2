@@ -21,7 +21,7 @@ services:
     environment:
       TZ: '{{ pihole_timezone }}'
       WEBPASSWORD: '{{ pihole_password }}'
-      PIHOLE_DNS_: '{{ cloudflared_dns_ip }}#{{ cloudflared_dns_port }}'
+      PIHOLE_DNS_: '{{ cloudflared_dns_ip }}'
       ServerIP: '{{ ansible_facts['default_ipv4']['address'] }}'
     dns:
       - 127.0.0.1
@@ -36,12 +36,12 @@ services:
     container_name: cloudflared-dns
     image: visibilityspots/cloudflared:latest
     hostname: '{{ cloudflared_dns_hostname }}'
-    ports:
-      - '{{ cloudflared_dns_port }}:{{ cloudflared_dns_port }}/udp'
+    expose:
+      - '53/udp'
     environment:
-      PORT: '{{ cloudflared_dns_port }}'
+      PORT: '53'
     dns:
-      - '127.0.0.1:{{ cloudflared_dns_port }}'
+      - '127.0.0.1'
     networks:
       dns-resolution:
         ipv4_address: '{{ cloudflared_dns_ip }}'
