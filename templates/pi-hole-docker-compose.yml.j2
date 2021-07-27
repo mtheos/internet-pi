@@ -22,6 +22,9 @@ services:
       TZ: '{{ pihole_timezone }}'
       WEBPASSWORD: '{{ pihole_password }}'
       PIHOLE_DNS_: '{{ cloudflared_dns_ip }}'
+      REV_SERVER: '{{ pihole_conditional_forwarding }}'
+      REV_SERVER_TARGET: '{{  pihole_conditional_forwarding_dhcp_ip }}'
+      REV_SERVER_CIDR: '{{ pihole_conditional_forwarding_subnet }}'
       ServerIP: '{{ ansible_facts['default_ipv4']['address'] }}'
     dns:
       - 127.0.0.1
