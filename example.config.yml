@@ -10,7 +10,7 @@ pihole_password: "change-this-password"
 pihole_dnssec: "true"
 pihole_conditional_forwarding: "true"
 pihole_conditional_forwarding_dhcp_ip: "192.168.0.1"
-pihole_conditional_forwarding_subnet: "192.168.0.0/32"
+pihole_conditional_forwarding_subnet: "192.168.0.0/24"
 dns_resolution_subnet: "172.16.0.0/29"
 
 # Cloudflared DNS configuration.
