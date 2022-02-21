@@ -19,5 +19,5 @@
 - name: Ensure Pi-hole is running.
   community.docker.docker_compose:
     project_src: "{{ config_dir }}/pi-hole/"
-    build: false
+    build: true
   become: false
