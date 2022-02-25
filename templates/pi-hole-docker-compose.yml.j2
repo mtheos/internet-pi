@@ -8,11 +8,13 @@ networks:
       driver: default
       config:
         - subnet: '{{ dns_resolution_subnet }}'
+  tunnel:
+    external:
+      name: '{{ argo_tunnel_network }}'
 
 # More info at https://github.com/pi-hole/docker-pi-hole/ and https://docs.pi-hole.net/
 services:
   pihole:
-    container_name: pihole
     image: pihole/pihole:latest
     hostname: '{{ pihole_hostname }}'
     ports:
@@ -34,10 +36,10 @@ services:
       - './etc-dnsmasq.d/:/etc/dnsmasq.d/'
     networks:
       - dns-resolution
+      - tunnel
     restart: unless-stopped
 
-  cloudflared-dns:
-    container_name: cloudflared-dns
+  cloudflare-dns:
     image: visibilityspots/cloudflared:latest
     hostname: '{{ cloudflared_dns_hostname }}'
     expose:

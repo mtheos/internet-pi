@@ -1,3 +1,4 @@
+# {{ ansible_managed }}
 ---
 version: "3.1"
 
@@ -8,6 +9,9 @@ volumes:
 networks:
   front-tier:
   back-tier:
+  tunnel:
+    external:
+      name: '{{ argo_tunnel_network }}'
 
 services:
   prometheus:
@@ -45,6 +49,7 @@ services:
     networks:
       - back-tier
       - front-tier
+      - tunnel
 
   ping:
     tty: true

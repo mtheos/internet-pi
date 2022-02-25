@@ -30,6 +30,9 @@
     - name: Setup Docker.
       ansible.builtin.import_tasks: tasks/docker.yml
 
+    - name: Set up Argo Tunnel.
+      ansible.builtin.import_tasks: tasks/argo-tunnel.yml
+
     - name: Set up Internet Monitoring.
       ansible.builtin.import_tasks: tasks/internet-monitoring.yml
       when: monitoring_enable
