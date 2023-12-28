@@ -1,0 +1,25 @@
+---
+- name: Create tunnel network
+  docker_network:
+    name: '{{ argo_tunnel_network }}'
+
+- name: Create Argo Tunnel folder on Pi.
+  ansible.builtin.file:
+    path: "{{ config_dir }}/argo-tunnel"
+    state: directory
+    mode: 0755
+  become: false
+
+- name: Copy Argo-Tunnel docker-compose template to Pi.
+  ansible.builtin.template:
+    src: templates/argo-tunnel-docker-compose.yml.j2
+    dest: "{{ config_dir }}/argo-tunnel/docker-compose.yml"
+    mode: '0640'
+  become: false
+  notify: Restart argo-tunnel
+
+- name: Ensure argo-tunnel is running.
+  community.docker.docker_compose:
+    project_src: "{{ config_dir }}/argo-tunnel/"
+    build: true
+  become: false

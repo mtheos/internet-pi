@@ -2,9 +2,17 @@
 ---
 version: "3.5"
 
+networks:
+  dns-resolution:
+    ipam:
+      driver: default
+      config:
+        - subnet: '{{ dns_resolution_subnet }}'
+  tunnel:
+    external:
+      name: '{{ argo_tunnel_network }}'
 {% if domain_name_enable and domain_name and domain_pihole %}
 {# Make sure pihole and nginx-proxy are in the same network #}
-networks:
   front-tier:
     name: internet-monitoring-front-tier
 {% endif %}
@@ -12,7 +20,6 @@ networks:
 # More info at https://github.com/pi-hole/docker-pi-hole/ and https://docs.pi-hole.net/
 services:
   pihole:
-    container_name: pihole
     image: pihole/pihole:latest
     restart: unless-stopped
     hostname: '{{ pihole_hostname }}'
@@ -29,6 +36,11 @@ services:
     environment:
       TZ: '{{ pihole_timezone }}'
       WEBPASSWORD: '{{ pihole_password }}'
+      PIHOLE_DNS_: '{{ cloudflared_dns_ip }}'
+      DNSSEC: '{{ pihole_dnssec }}'
+      REV_SERVER: '{{ pihole_conditional_forwarding }}'
+      REV_SERVER_TARGET: '{{  pihole_conditional_forwarding_dhcp_ip }}'
+      REV_SERVER_CIDR: '{{ pihole_conditional_forwarding_subnet }}'
       ServerIP: '{{ ansible_facts['default_ipv4']['address'] }}'
 {% if domain_name_enable and domain_name and domain_pihole %}
       VIRTUAL_HOST: {{ domain_pihole }}.{{ domain_name }}
@@ -39,7 +51,6 @@ services:
 {% endif %}
     dns:
       - 127.0.0.1
-      - 8.8.8.8
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - './etc-pihole/:/etc/pihole/'
@@ -74,3 +85,21 @@ services:
       PIHOLE_PASSWORD: '{{ pihole_password }}'
       INTERVAL: '30s'
       PORT: 9617
+    networks:
+      - dns-resolution
+      - tunnel
+    restart: unless-stopped
+
+  cloudflare-dns:
+    image: visibilityspots/cloudflared:latest
+    hostname: '{{ cloudflared_dns_hostname }}'
+    expose:
+      - '53/udp'
+    environment:
+      PORT: '53'
+    dns:
+      - '127.0.0.1'
+    networks:
+      dns-resolution:
+        ipv4_address: '{{ cloudflared_dns_ip }}'
+    restart: unless-stopped
