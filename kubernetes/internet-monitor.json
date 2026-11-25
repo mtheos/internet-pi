@@ -1,0 +1,264 @@
+{
+  "uid": "o9mIe_Aix",
+  "title": "Internet Monitor",
+  "schemaVersion": 39,
+  "editable": false,
+  "refresh": "1m",
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 15,
+      "title": "Latest download",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "internet-monitor-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 8,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps"
+        },
+        "overrides": []
+      },
+      "options": {},
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "last_over_time(speedtest_download_bits_per_second[75m]) and (last_over_time(speedtest_up[75m]) == 1)",
+          "legendFormat": "",
+          "instant": true,
+          "range": false
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "Latest upload",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "internet-monitor-prometheus"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 0,
+        "w": 8,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps"
+        },
+        "overrides": []
+      },
+      "options": {},
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "last_over_time(speedtest_upload_bits_per_second[75m]) and (last_over_time(speedtest_up[75m]) == 1)",
+          "legendFormat": "",
+          "instant": true,
+          "range": false
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "title": "Latest speed test latency",
+      "type": "stat",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "internet-monitor-prometheus"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 0,
+        "w": 8,
+        "h": 4
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "options": {},
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "last_over_time(speedtest_ping_latency_milliseconds[75m]) and (last_over_time(speedtest_up[75m]) == 1)",
+          "legendFormat": "",
+          "instant": true,
+          "range": false
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "title": "HTTPS reachability",
+      "type": "state-timeline",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "internet-monitor-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 4,
+        "w": 24,
+        "h": 6
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "Down",
+                  "color": "red"
+                },
+                "1": {
+                  "text": "Up",
+                  "color": "green"
+                }
+              }
+            }
+          ],
+          "custom": {
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "mergeValues": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "probe_success{job=\"ping\"}",
+          "legendFormat": "{{instance}}"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Download and upload",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "internet-monitor-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 10,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bps",
+          "custom": {
+            "showPoints": "always",
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {},
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "last_over_time(speedtest_download_bits_per_second[1h]) and (last_over_time(speedtest_up[1h]) == 1)",
+          "legendFormat": "Download",
+          "instant": false,
+          "range": true,
+          "interval": "1h"
+        },
+        {
+          "refId": "B",
+          "expr": "last_over_time(speedtest_upload_bits_per_second[1h]) and (last_over_time(speedtest_up[1h]) == 1)",
+          "legendFormat": "Upload",
+          "instant": false,
+          "range": true,
+          "interval": "1h"
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "title": "Speed test latency",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "internet-monitor-prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 10,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "custom": {
+            "showPoints": "always",
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {},
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "last_over_time(speedtest_ping_latency_milliseconds[1h]) and (last_over_time(speedtest_up[1h]) == 1)",
+          "legendFormat": "Latency",
+          "instant": false,
+          "range": true,
+          "interval": "1h"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "HTTPS request duration",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "internet-monitor-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 18,
+        "w": 24,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "options": {},
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "probe_duration_seconds{job=\"ping\"} and on(instance) (probe_success{job=\"ping\"} == 1)",
+          "legendFormat": "{{instance}}"
+        }
+      ]
+    }
+  ]
+}

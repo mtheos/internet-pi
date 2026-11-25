@@ -8,6 +8,10 @@ I have had a couple Pis doing random Internet-related duties for years. It's fin
 
 So that's what this is.
 
+## Deploy on Kubernetes
+
+The [Kubernetes package](kubernetes/README.md) runs Internet Monitor with Prometheus, Grafana, Blackbox Exporter, and Speedtest Exporter. It includes a standalone install and can serve as a pinned base for site overlays. The Raspberry Pi Ansible/Compose instructions follow below.
+
 ## Features
 
 **Internet Monitoring**: Installs Prometheus and Grafana, along with a few Docker containers to monitor your Internet connection with Speedtest.net speedtests and HTTP tests so you can see uptime, ping stats, and speedtest results over time.
