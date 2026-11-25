@@ -1,6 +1,6 @@
 ---
 - name: Create tunnel network
-  docker_network:
+  community.docker.docker_network:
     name: '{{ argo_tunnel_network }}'
 
 - name: Create Argo Tunnel folder on Pi.
@@ -19,7 +19,7 @@
   notify: Restart argo-tunnel
 
 - name: Ensure argo-tunnel is running.
-  community.docker.docker_compose:
+  community.docker.docker_compose_v2:
     project_src: "{{ config_dir }}/argo-tunnel/"
-    build: true
+    build: never
   become: false

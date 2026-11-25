@@ -1,7 +1,5 @@
 # {{ ansible_managed }}
 ---
-version: "3.5"
-
 volumes:
   prometheus_data: {}
   grafana_data: {}
@@ -9,6 +7,11 @@ volumes:
 networks:
   front-tier:
     name: internet-monitoring-front-tier
+{% if argo_tunnel_network | default('') %}
+  tunnel:
+    name: '{{ argo_tunnel_network }}'
+    external: true
+{% endif %}
   back-tier:
     name: internet-monitoring-back-tier
 
@@ -62,8 +65,6 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - grafana_data:/var/lib/grafana
       - ./grafana/provisioning/:/etc/grafana/provisioning/
-    depends_on:
-      - prometheus
     ports:
       - 3030:3000
     env_file:
@@ -71,8 +72,12 @@ services:
     networks:
       - back-tier
       - front-tier
-{% if domain_name_enable and domain_name and domain_grafana %}
+{% if argo_tunnel_network | default('') %}
+      - tunnel
+{% endif %}
     depends_on:
+      - prometheus
+{% if domain_name_enable and domain_name and domain_grafana %}
       - nginx-proxy
     environment:
       - VIRTUAL_HOST={{ domain_grafana }}.{{ domain_name }}
@@ -99,6 +104,9 @@ services:
   speedtest:
     image: miguelndecarvalho/speedtest-exporter:latest
     restart: always
+    healthcheck:
+      test: "wget --no-verbose --tries=1 --spider http://0.0.0.0:9798/"
+      timeout: 10s
     expose:
       - 9798
     ports:

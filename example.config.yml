@@ -20,7 +20,10 @@ pihole_conditional_forwarding_dhcp_ip: "192.168.0.1"
 pihole_conditional_forwarding_subnet: "192.168.0.0/24"
 dns_resolution_subnet: "172.16.0.0/29"
 
-# Cloudflared DNS configuration.
+# Optional existing Cloudflare Tunnel network. Set its name to enable the tunnel.
+argo_tunnel_network: ''
+
+# DNS-over-HTTPS sidecar. These legacy variable names are kept for existing configs.
 cloudflared_dns_hostname: cloudflared-dns
 cloudflared_dns_ip: "172.16.0.3"
 

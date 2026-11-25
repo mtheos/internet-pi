@@ -33,6 +33,7 @@
 
     - name: Set up Argo Tunnel.
       ansible.builtin.import_tasks: tasks/argo-tunnel.yml
+      when: argo_tunnel_network | default('') | length > 0
 
     - name: Set up Internet Monitoring.
       ansible.builtin.import_tasks: tasks/internet-monitoring.yml
