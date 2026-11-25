@@ -46,7 +46,7 @@ scrape_configs:
   - job_name: 'starlink'
     metrics_path: /metrics
     static_configs:
-      - targets: ['172.17.0.1:9817']
+      - targets: ['172.17.0.1:9451']
 {% endif %}
 
   - job_name: 'ping'
@@ -78,7 +78,7 @@ scrape_configs:
 {% if pihole_enable %}
   - job_name: '{{ pihole_hostname }}'
     static_configs:
-      - targets: ['{{ pihole_hostname }}:9617']
+      - targets: ['pihole-exporter:9617']
 {% endif %}
 
 {% filter indent(width=2,first=True) %}

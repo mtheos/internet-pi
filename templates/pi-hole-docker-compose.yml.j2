@@ -1,25 +1,33 @@
 # {{ ansible_managed }}
 ---
-version: "3.5"
-
 networks:
   dns-resolution:
     ipam:
-      driver: default
       config:
         - subnet: '{{ dns_resolution_subnet }}'
+{% if argo_tunnel_network | default('') %}
   tunnel:
-    external:
-      name: '{{ argo_tunnel_network }}'
+    name: '{{ argo_tunnel_network }}'
+    external: true
+{% endif %}
 {% if domain_name_enable and domain_name and domain_pihole %}
 {# Make sure pihole and nginx-proxy are in the same network #}
   front-tier:
     name: internet-monitoring-front-tier
+    external: true
 {% endif %}
+{# pihole and pihole-exporter need to share network with Prometheus #}
+{% if monitoring_enable %}
+  back-tier:
+    name: internet-monitoring-back-tier
+    external: true
+{% endif %}
+
 
 # More info at https://github.com/pi-hole/docker-pi-hole/ and https://docs.pi-hole.net/
 services:
   pihole:
+    container_name: pihole
     image: pihole/pihole:latest
     restart: unless-stopped
     hostname: '{{ pihole_hostname }}'
@@ -35,18 +43,27 @@ services:
       - "443:443/tcp"
     environment:
       TZ: '{{ pihole_timezone }}'
-      WEBPASSWORD: '{{ pihole_password }}'
-      PIHOLE_DNS_: '{{ cloudflared_dns_ip }}'
-      DNSSEC: '{{ pihole_dnssec }}'
-      REV_SERVER: '{{ pihole_conditional_forwarding }}'
-      REV_SERVER_TARGET: '{{  pihole_conditional_forwarding_dhcp_ip }}'
-      REV_SERVER_CIDR: '{{ pihole_conditional_forwarding_subnet }}'
-      ServerIP: '{{ ansible_facts['default_ipv4']['address'] }}'
+      FTLCONF_webserver_api_password: '{{ pihole_password }}'
+      FTLCONF_dns_reply_host_IPv4: '{{ ansible_facts['default_ipv4']['address'] }}'
+      # Docker publishes DNS from a bridge, so host interface names are unavailable here.
+      FTLCONF_dns_listeningMode: 'ALL'
+      FTLCONF_dns_upstreams: '{{ cloudflared_dns_ip }}'
+      FTLCONF_dns_dnssec: '{{ pihole_dnssec | string | lower }}'
+      FTLCONF_dns_revServers: '{{ pihole_conditional_forwarding | string | lower }},{{ pihole_conditional_forwarding_subnet }},{{ pihole_conditional_forwarding_dhcp_ip }}'
 {% if domain_name_enable and domain_name and domain_pihole %}
       VIRTUAL_HOST: {{ domain_pihole }}.{{ domain_name }}
       VIRTUAL_PORT: 80
       PROXY_LOCATION: {{ domain_pihole }}
+{% endif %}
     networks:
+      - dns-resolution
+{% if argo_tunnel_network | default('') %}
+      - tunnel
+{% endif %}
+{% if monitoring_enable %}
+      - back-tier
+{% endif %}
+{% if domain_name_enable and domain_name and domain_pihole %}
       - front-tier
 {% endif %}
     dns:
@@ -73,11 +90,14 @@ services:
 {% endif %}
 {% endif %}
 
+{% if monitoring_enable %}
   pihole-exporter:
     container_name: pihole-exporter
     image: ekofr/pihole-exporter:latest
     restart: unless-stopped
     hostname: 'pihole-exporter'
+    networks:
+      - back-tier
     ports:
       - "9617:9617"
     environment:
@@ -85,20 +105,12 @@ services:
       PIHOLE_PASSWORD: '{{ pihole_password }}'
       INTERVAL: '30s'
       PORT: 9617
-    networks:
-      - dns-resolution
-      - tunnel
-    restart: unless-stopped
+{% endif %}
 
   cloudflare-dns:
-    image: visibilityspots/cloudflared:latest
+    image: adguard/dnsproxy:v0.86.0
     hostname: '{{ cloudflared_dns_hostname }}'
-    expose:
-      - '53/udp'
-    environment:
-      PORT: '53'
-    dns:
-      - '127.0.0.1'
+    command: ["--listen=0.0.0.0", "--port=53", "--upstream=https://1.1.1.1/dns-query", "--upstream=https://1.0.0.1/dns-query"]
     networks:
       dns-resolution:
         ipv4_address: '{{ cloudflared_dns_ip }}'

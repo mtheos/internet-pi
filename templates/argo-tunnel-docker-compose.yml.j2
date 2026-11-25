@@ -1,9 +1,7 @@
-version: '3'
-
 networks:
   tunnel:
-    external:
-      name: '{{ argo_tunnel_network }}'
+    name: '{{ argo_tunnel_network }}'
+    external: true
 
 services:
   tunnel:
@@ -14,4 +12,3 @@ services:
       - tunnel
     entrypoint: "cloudflared tunnel --config /etc/cloudflared/tunnel.yml run"
     restart: unless-stopped
-

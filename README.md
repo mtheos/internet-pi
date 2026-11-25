@@ -22,9 +22,15 @@ Other features:
 
   - **Shelly Plug Monitoring**: Installs a [`shelly-plug-prometheus` exporter](https://github.com/geerlingguy/shelly-plug-prometheus) and a Grafana dashboard, which tracks and displays power usage on a Shelly Plug running on the local network. (Disabled by default. Enable and configure using the `shelly_plug_*` vars in `config.yml`.)
   - **AirGradient Monitoring**: Configures [`airgradient-prometheus`](https://github.com/geerlingguy/airgradient-prometheus) and a Grafana dashboard, which tracks and displays air quality over time via one or more AirGradient DIY monitors. (Disabled by default. Enable and configure using the `airgradient_enable` var in `config.yml`. See example configuration for ability to monitor multiple AirGradient DIY stations.)
-  - **Starlink Monitoring**: Installs a [`starlink` prometheus exporter](https://github.com/danopstech/starlink_exporter) and a Grafana dashboard, which tracks and displays Starlink statistics. (Disabled by default. Enable and configure using the `starlink_enable` var in `config.yml`.)
+  - **Starlink Monitoring**: Installs a [`starlink_exporter`](https://github.com/joshuasing/starlink_exporter) and a Grafana dashboard, which tracks and displays Starlink statistics. (Disabled by default. Enable and configure using the `starlink_enable` var in `config.yml`.)
 
 **IMPORTANT NOTE**: If you use the included Internet monitoring, it will download a decently-large amount of data through your Internet connection on a daily basis. Don't use it, or tune the `internet-monitoring` setup to not run the speedtests as often, if you have a metered connection!
+
+## DNS-over-HTTPS on this fork
+
+The Compose installation sends Pi-hole's upstream DNS through AdGuard dnsproxy to Cloudflare over HTTPS. The existing `cloudflared_dns_ip` and `cloudflared_dns_hostname` settings now configure the dnsproxy sidecar. Pi-hole v6 reads the DNSSEC and conditional forwarding settings from the existing `pihole_*` variables.
+
+The Cloudflare Tunnel is separate. Set `argo_tunnel_network` to enable an existing locally configured tunnel. It needs its own tunnel configuration and credentials.
 
 ## Recommended Pi and OS
 
@@ -43,6 +49,8 @@ It should also work with Ubuntu for Pi, or Arch Linux, but has not been tested o
   1. [Install Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html). The easiest way (especially on Pi or a Debian system) is via Pip:
      1. (If on Pi/Debian): `sudo apt-get install -y python3-pip`
      2. (Everywhere): `pip3 install ansible`
+     3. If you get an error like "externally-managed-environment", follow [this guide to fix it](https://www.jeffgeerling.com/blog/2023/how-solve-error-externally-managed-environment-when-installing-pip3), then run `pip3 install ansible` again.
+     4. Make sure Ansible is in your PATH: `export PATH=$PATH:~/.local/bin` (and consider [adding it permanently](https://askubuntu.com/a/1113838)).
   2. Clone this repository: `git clone https://github.com/geerlingguy/internet-pi.git`, then enter the repository directory: `cd internet-pi`.
   3. Install requirements: `ansible-galaxy collection install -r requirements.yml` (if you see `ansible-galaxy: command not found`, restart your SSH session or reboot the Pi and try again)
   4. Make copies of the following files and customize them to your liking:
@@ -50,13 +58,13 @@ It should also work with Ubuntu for Pi, or Arch Linux, but has not been tested o
      - `example.config.yml` to `config.yml`
   5. Run the playbook: `ansible-playbook main.yml`
 
-> **If running locally on the Pi**: You may encounter an error like "Error while fetching server API version". If you do, please either reboot or log out and log back in, then run the playbook again.
+> **If running locally on the Pi**: You may encounter an error like "Error while fetching server API version" or "connect: permission denied". If you do, please either reboot or log out and log back in, then run the playbook again. If you continue to receive a "permission denied while trying to connect to the Docker daemon socket" error, then you may need to first add your user to the `docker` user group: `sudo usermod -aG docker $USER`, as outlined in the [Docker documentation](https://docs.docker.com/engine/install/linux-postinstall/).
 
 ## Usage
 
 ### Pi-hole
 
-Visit the Pi's IP address (e.g. http://192.168.1.10/) and use the `pihole_password` you configured in your `config.yml` file. An existing pi-hole installation can be left unaltered by disabling the setup of this proyect's installation in your `config.yml` (`pihole_enable: false`)
+Visit the Pi's IP address (e.g. http://192.168.1.10/admin) and use the `pihole_password` you configured in your `config.yml` file. An existing pi-hole installation can be left unaltered by disabling the setup of this project's installation in your `config.yml` (`pihole_enable: false`)
 
 ### Grafana
 
@@ -94,15 +102,15 @@ prometheus_node_exporter_targets:
 To upgrade Pi-hole to the latest version, run the following commands:
 
 ```bash
-cd ~/pi-hole # 
-docker-compose pull             # pulls the latest images
-docker-compose up -d --no-deps  # restarts containers with newer images
+cd ~/pi-hole #
+docker compose pull             # pulls the latest images
+docker compose up -d --no-deps  # restarts containers with newer images
 docker system prune --all       # deletes unused images
 ```
 
 ### Configurations and internet-monitoring images
 
-Upgrades for the other configurations are similar (go into the directory, and run the same `docker-compose` commands. Make sure to `cd` into the `config_dir` that you use in your `config.yml` file. 
+Upgrades for the other configurations are similar (go into the directory, and run the same `docker compose` commands. Make sure to `cd` into the `config_dir` that you use in your `config.yml` file.
 
 Alternatively, you may update the initial `config.yml` in the the repo folder and re-run the main playbook: `ansible-playbook main.yml`. At some point in the future, a dedicated upgrade playbook may be added, but for now, upgrades may be performed manually as shown above.
 
@@ -119,16 +127,16 @@ To remove `internet-pi` from your system, run the following commands (assuming t
 cd ~/internet-monitoring
 
 # Shut down internet-monitoring containers and delete data volumes.
-docker-compose down -v
+docker compose down -v
 
 # Enter the pi-hole directory.
 cd ~/pi-hole
 
 # Shutdown pi-hole containers and delete data volumes.
-docker-compose down -v
+docker compose down -v
 
 # Delete all the unused container images, volumes, etc. from the system.
-docker system prune -f
+docker system prune -af
 ```
 
 Do the same thing for any of the other optional directories added by this project (e.g. `shelly-plug-prometheus`, `starlink-exporter`, etc.).
